@@ -1,0 +1,3 @@
+read_verilog hub75e.v
+synth_anlogic -top hub75e
+write_verilog full.v

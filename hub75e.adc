@@ -1,0 +1,28 @@
+set_pin_assignment {CLK_IN} { LOCATION = K14;  } ##24MHZ
+set_pin_assignment {USER_KEY} { LOCATION = K16; } ##USER_KEY
+
+set_pin_assignment {RGB_LED[0]} { LOCATION = R3;  } ##LED_R, R3
+set_pin_assignment {RGB_LED[1]} { LOCATION = J14;  } ##LED_G, J14
+set_pin_assignment {RGB_LED[2]} { LOCATION = P13;  } ##LED_B, P13
+
+set_pin_assignment {hub_R1} { LOCATION = A4;  } ##R1
+set_pin_assignment {hub_G1} { LOCATION = A3;  } ##G1
+set_pin_assignment {hub_B1} { LOCATION = C5;  } ##B1
+set_pin_assignment {hub_R2} { LOCATION = B6;  } ##R2
+set_pin_assignment {hub_G2} { LOCATION = C9;  } ##G2
+set_pin_assignment {hub_B2} { LOCATION = B10;  } ##B2
+
+set_pin_assignment {hub_E} { LOCATION = B14;  } ##E
+set_pin_assignment {hub_A} { LOCATION = A14;  } ##A
+set_pin_assignment {hub_B} { LOCATION = B15;  } ##B
+set_pin_assignment {hub_C} { LOCATION = B16;  } ##C
+set_pin_assignment {hub_D} { LOCATION = C16;  } ##D
+set_pin_assignment {hub_CK} { LOCATION = C15;  } ##CK
+set_pin_assignment {hub_ST} { LOCATION = E16;  } ##ST
+set_pin_assignment {hub_OE} { LOCATION = F16;  } ##OE
+
+set_pin_assignment {dbg_0} { LOCATION = H13;  } ##dbg_0
+set_pin_assignment {dbg_1} { LOCATION = J13;  } ##dbg_1
+set_pin_assignment {spi_mosi} { LOCATION = P2;  } ##mosi
+set_pin_assignment {spi_clk} { LOCATION = R2;  } ##sclk
+set_pin_assignment {spi_cs} { LOCATION = N5;  } ##cs
