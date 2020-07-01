@@ -3,6 +3,7 @@
 
 module hub75e_if (
 		  input 	   clk,
+		  input 	   resetn,
 		  output reg [4:0] lines,
 		  output 	   hub_ck,
 		  output 	   hub_st,
@@ -91,23 +92,13 @@ module hub75e (
 	       input wire 	 spi_cs
 );
 
-   // Power-on and User reset
+   // Power-on and user reset
    reg [5:0] 			 reset_cnt = 0;
    wire 			 resetn = &reset_cnt;
 
    always @(posedge CLK_IN) begin
       reset_cnt <= reset_cnt + !resetn;
    end
-
-   reg 			 uresetn;
-
-   always @(posedge CLK_IN) begin
-      uresetn <= ~USER_KEY;
-   end
-
-   assign RST_N = ~USER_KEY;
-
-// & uresetn;
 
    wire   clock;
    assign clock = CLK_IN;
@@ -121,23 +112,32 @@ module hub75e (
    wire frame_clk;
 
    // Setup SPI and data transfers.
-   wire spi_resetn = RST_N;
    wire spi_firstword;
    wire spi_done;
    reg [10:0] spi_word_count = 0;
 
    wire       spi_dbg;
 
-   spi_slave spi(clock, 1'b1, spi_clk, spi_mosi, spi_cs,
+   spi_slave spi(clock, resetn, spi_clk, spi_mosi, spi_cs,
 		 ram_wdata, spi_firstword, spi_done);
 
+   reg 	      spi_cycle_done = 0;
+
    always @(posedge clock) begin
+       if (!resetn) begin
+	 spi_word_count <= 0;
+	 spi_cycle_done <= 0;
+      end
+
       if (spi_firstword) begin
          spi_word_count <= 0;
       end
 
       if (spi_done) begin
          spi_word_count <= spi_word_count + 1;
+	 if (&spi_word_count) begin
+	    spi_cycle_done <= 1;
+	 end
       end
 
    end // always @ (posedge clock)
@@ -150,44 +150,33 @@ module hub75e (
    wire [4:0] lines;
    assign { hub_E, hub_D, hub_C, hub_B, hub_A } = lines;
  
-   hub75e_if hubif(clock, lines, hub_CK, hub_ST, hub_OE, ram_raddr, frame_clk);
+   hub75e_if hubif(clock, resetn, lines, hub_CK, hub_ST, hub_OE, ram_raddr, frame_clk);
 
    // 5 bit PWM.
    reg [9:0] frame_count;
    always @(posedge frame_clk) begin
-      frame_count <= frame_count + 1;
+      if (!resetn) begin
+	 frame_count <= 0;
+      end
+      else begin
+	 frame_count <= frame_count + 1;
+      end
    end
 
-   /*
    // Enable display
-   reg       enable;
-   always @(posedge clock) begin
-      if (~RST_N) begin
-	 enable <= 0;
-      end
-      if (&spi_word_count) begin
-	 enable <= 1;
-      end
-   end
-*/
-//   reg enable = 1;
+   assign       enable = spi_cycle_done;
 
-   assign hub_R1 = (ram_rdata1[14:10] > frame_count[9:5]);
-// & enable;
-   assign hub_G1 = (ram_rdata1[9:5] > frame_count[9:5]);
-// & enable;
-   assign hub_B1 = (ram_rdata1[4:0] > frame_count[9:5]);
-// & enable;
-   assign hub_R2 = (ram_rdata2[14:10] > frame_count[9:5]);
-// & enable;
-   assign hub_G2 = (ram_rdata2[9:5] > frame_count[9:5]);
-// & enable;
-   assign hub_B2 = (ram_rdata2[4:0] > frame_count[9:5]);
-// & enable;
+   assign hub_R1 = (ram_rdata1[14:10] > frame_count[9:5]) & enable;
+   assign hub_G1 = (ram_rdata1[9:5] > frame_count[9:5]) & enable;
+   assign hub_B1 = (ram_rdata1[4:0] > frame_count[9:5]) & enable;
+   assign hub_R2 = (ram_rdata2[14:10] > frame_count[9:5]) & enable;
+   assign hub_G2 = (ram_rdata2[9:5] > frame_count[9:5]) & enable;
+   assign hub_B2 = (ram_rdata2[4:0] > frame_count[9:5]) & enable;
 
 
    assign RGB_LED[0] = 1'b1;
    assign RGB_LED[1] = 1'b1;
    assign RGB_LED[2] = spi_cs;
+   assign dbg_0 = spi_cycle_done;
 
 endmodule // hub75e
