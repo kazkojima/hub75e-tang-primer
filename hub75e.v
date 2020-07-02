@@ -2,14 +2,14 @@
 `include "spi.v"
 
 module hub75e_if (
-		  input 	   clk,
-		  input 	   resetn,
-		  output reg [4:0] lines,
-		  output 	   hub_ck,
-		  output 	   hub_st,
-		  output 	   hub_oe,
-		  output [10:0]    ram_addr,
-		  output reg 	   frame_clk
+		  input 	clk,
+		  input 	resetn,
+		  output [4:0] 	lines,
+		  output 	hub_ck,
+		  output 	hub_st,
+		  output 	hub_oe,
+		  output [10:0] ram_addr,
+		  output reg 	frame_clk
 );
    reg [10:0] 			   hub_addr;
    reg [4:0] 			   line;
@@ -18,10 +18,14 @@ module hub75e_if (
    assign hub_ck = clk & ~frame_clk;
    assign hub_st = clk & frame_clk;
    assign hub_oe = (state != 0);
+   assign lines = hub_addr[10:6] - 1;
 
    always @(negedge clk) begin
-      if (hub_addr[5:0] == 63) begin
-	 lines <= hub_addr[10:6];
+      if (!resetn) begin
+	 state <= 0;
+	 hub_addr <= 0;
+	 line <= 0;
+	 frame_clk <= 0;
       end
       if (state == 0) begin
 	 if (hub_addr[5:0] == 63) begin
@@ -30,6 +34,7 @@ module hub75e_if (
 	 end else begin
 	    hub_addr <= hub_addr + 1;
 	    frame_clk <= 0;
+	    state <= 0;
 	 end
       end
       else if (state == 1) begin
@@ -101,7 +106,9 @@ module hub75e (
    end
 
    wire   clock;
-   assign clock = CLK_IN;
+   wire   extlock;
+   pll pll0(CLK_IN, 1'b0, extlock, clock);
+   //assign clock = CLK_IN;
 
    wire [10:0] ram_waddr;
    wire [31:0] ram_wdata;
@@ -115,18 +122,15 @@ module hub75e (
    wire spi_firstword;
    wire spi_done;
    reg [10:0] spi_word_count = 0;
-
-   wire       spi_dbg;
+   reg 	      first_cycle_done = 0;
 
    spi_slave spi(clock, resetn, spi_clk, spi_mosi, spi_cs,
 		 ram_wdata, spi_firstword, spi_done);
 
-   reg 	      spi_cycle_done = 0;
-
    always @(posedge clock) begin
        if (!resetn) begin
 	 spi_word_count <= 0;
-	 spi_cycle_done <= 0;
+	 first_cycle_done <= 0;
       end
 
       if (spi_firstword) begin
@@ -135,15 +139,15 @@ module hub75e (
 
       if (spi_done) begin
          spi_word_count <= spi_word_count + 1;
-	 if (&spi_word_count) begin
-	    spi_cycle_done <= 1;
+ 	 if (&spi_word_count) begin
+	    first_cycle_done <= 1;
 	 end
       end
 
    end // always @ (posedge clock)
 
    // Pixel 2-port ram
-   pixram pram(CLK_IN, 1'b1, spi_done, ram_raddr, spi_word_count,
+   pixram pram(clock, 1'b1, spi_done, ram_raddr, spi_word_count,
 	      {ram_rdata2, ram_rdata1}, ram_wdata);
 
    // Generate IF signals
@@ -164,7 +168,7 @@ module hub75e (
    end
 
    // Enable display
-   assign       enable = spi_cycle_done;
+   assign       enable = first_cycle_done;
 
    assign hub_R1 = (ram_rdata1[14:10] > frame_count[9:5]) & enable;
    assign hub_G1 = (ram_rdata1[9:5] > frame_count[9:5]) & enable;
@@ -177,6 +181,7 @@ module hub75e (
    assign RGB_LED[0] = 1'b1;
    assign RGB_LED[1] = 1'b1;
    assign RGB_LED[2] = spi_cs;
-   assign dbg_0 = spi_cycle_done;
+   assign dbg_0 = &spi_word_count;
+   assign dbg_1 = first_cycle_done;
 
 endmodule // hub75e

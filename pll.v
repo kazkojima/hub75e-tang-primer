@@ -24,9 +24,9 @@ module pll (
 		.KVCO(6),
 		.LPF_CAPACITOR(3),
 		.LPF_RESISTOR(2),
-		// 24*18/12 = 36
-		.REFCLK_DIV(12),
-		.FBCLK_DIV(18),
+		// 24*16/24 = 16
+		.REFCLK_DIV(24),
+		.FBCLK_DIV(16),
 		.CLKC0_ENABLE("ENABLE"),
 		.CLKC0_DIV(30),
 		.CLKC0_CPHASE(30),
