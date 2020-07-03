@@ -1,0 +1,34 @@
+menu "UDP to HUB75E SPI Configuration"
+
+config WIFI_SSID
+    string "WIFI access point name (SSID)"
+    default "ssidofAP"
+    help
+        Enter the name of the WIFI access point
+
+config WIFI_PASSWORD
+    string "WIFI password"
+    default "w1f1p@$$wOrd"
+    help
+        Enter ssid password
+
+config WIFI_MAXIMUM_RETRY
+    int "WiFi max retry"
+    default 5
+    help
+	WiFi max retry count
+
+config UDP_PORT
+    int "UDP port"
+    default 6000
+    help
+        TCP port used for command
+
+config MSG_LENGTH
+    int "msg length"
+    default 8192
+    help
+	LED data size
+
+
+endmenu
