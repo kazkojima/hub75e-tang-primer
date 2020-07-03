@@ -124,7 +124,7 @@ module hub75e (
    reg [10:0] spi_word_count = 0;
    reg 	      first_cycle_done = 0;
 
-   spi_slave spi(clock, resetn, spi_clk, spi_mosi, spi_cs,
+   spi_satellite spi(clock, resetn, spi_clk, spi_mosi, spi_cs,
 		 ram_wdata, spi_firstword, spi_done);
 
    always @(posedge clock) begin

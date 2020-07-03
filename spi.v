@@ -1,6 +1,7 @@
-// SPI slave, made by dd2, dachdecker2 on GitHub.
-// modifed for 32-bits input only
-module spi_slave (
+// This is a SPI satellite made by dachdecker2
+// https://github.com/dachdecker2/icoboard_ws2812b_display/spi.v
+// modifed for 32-bits word input only
+module spi_satellite (
    input wire 	     clk,
    input wire 	     resetn,
    input wire 	     spi_clk,

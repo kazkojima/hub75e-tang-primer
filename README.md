@@ -2,7 +2,7 @@
 
 This is a driver by Tang PRiMer for 64x64 LED panels with the HUB75E
 interface, based on https://github.com/shinyblink/sled-fpga-hub75.
-The bit-stream is generated with (yosys)[https://github.com/YosysHQ/yosys] and (nextpnr)[https://github.com/YosysHQ/nextpnr].
+The bit-stream is generated with [yosys](https://github.com/YosysHQ/yosys) and [nextpnr](https://github.com/YosysHQ/nextpnr).
 
 ![picture of a sled example](https://github.com/kazkojima/hub75e-tang-primer/blob/junkyard/images/hub75e-tang-primer.jpg)
 
@@ -27,4 +27,4 @@ which is at least x4 the SCLK, i.e. the maximal SCLK is limited by 4Mhz
 for the 16Mhz base clock.
 
 The prerequisites is yosys, nextpnr and Anlogic TD(Tang Dynasty) which is
-needed to write bit-stream to the chip.  See also (yosys/examples/anlogic/README)[https://github.com/YosysHQ/yosys/blob/master/examples/anlogic/README].
+needed to write bit-stream to the chip.  See also [yosys's examples/anlogic/README](https://github.com/YosysHQ/yosys/blob/master/examples/anlogic/README).

@@ -1,3 +1,9 @@
+// Tang PRiMer's PLL is described in Eagle datasheet:
+// https://github.com/kprasadvnsi/tang-doc/releases/download/1.0.0/Eagle_DataSheet_V2.8_english.pdf
+// VCO frequency range should be 300-1200 Mhz.
+// A static configuration to output 16Mhz on channel 0.
+//   FIN*FBCLK_DIV/REFCLK_DIV = 24*16/24 = 16Mhz
+// See yosys/techlibs/anlogic/eagle_bb.v for more EG_PHY_PLL parameters.
 module pll (
 	    input refclk,
 	    input reset,
@@ -7,9 +13,10 @@ module pll (
 
    wire 	   clk0_buf;
 
-   EG_LOGIC_BUFG bufg_feedback( .i(clk0_buf), .o(clk0_out) );
+   EG_LOGIC_BUFG bufg_feedback(.i(clk0_buf), .o(clk0_out));
 
-   EG_PHY_PLL #(.DPHASE_SOURCE("DISABLE"),
+   EG_PHY_PLL #(
+		.DPHASE_SOURCE("DISABLE"),
 		.DYNCFG("DISABLE"),
 		.FIN("24.000"),
 		.FEEDBK_MODE("NORMAL"),
@@ -24,7 +31,6 @@ module pll (
 		.KVCO(6),
 		.LPF_CAPACITOR(3),
 		.LPF_RESISTOR(2),
-		// 24*16/24 = 16
 		.REFCLK_DIV(24),
 		.FBCLK_DIV(16),
 		.CLKC0_ENABLE("ENABLE"),
