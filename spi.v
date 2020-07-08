@@ -9,7 +9,8 @@ module spi_satellite (
    input wire 	     spi_cs,
    output reg [31:0] read_value,
    output reg [0:0]  first_word,
-   output reg [0:0]  done
+   output reg [0:0]  done,
+   output wire       idle
 );
 
    // CPOL == 0: clock state while idle is low  ("inactive")
@@ -42,6 +43,8 @@ module spi_satellite (
 
    assign write  =    (CPOL ^ !(CPHA ^ spi_clk_reg))
      && (CPOL ^  (CPHA ^ spi_clk_pre));
+
+   assign idle = timeout_expired;
 
    localparam TIMEOUT_CYCLE_BITS = TIMEOUT__NOT_CS * ($clog2(TIMEOUT_CYCLES)-1);
    reg [TIMEOUT_CYCLE_BITS:0] timeout_counter = 0;

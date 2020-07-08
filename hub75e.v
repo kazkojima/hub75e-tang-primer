@@ -7,7 +7,7 @@ module hub75e_if (
 		  output [4:0] 	lines,
 		  output 	hub_ck,
 		  output 	hub_st,
-		  output 	hub_oe,
+		  output reg	hub_oe,
 		  output [10:0] ram_addr,
 		  output reg 	frame_clk
 );
@@ -17,7 +17,6 @@ module hub75e_if (
    assign ram_addr = hub_addr;
    assign hub_ck = clk & ~frame_clk;
    assign hub_st = clk & frame_clk;
-   assign hub_oe = (state != 0);
    assign lines = hub_addr[10:6] - 1;
 
    always @(negedge clk) begin
@@ -26,10 +25,12 @@ module hub75e_if (
 	 hub_addr <= 0;
 	 line <= 0;
 	 frame_clk <= 0;
+	 hub_oe <= 0;
       end
       if (state == 0) begin
 	 if (hub_addr[5:0] == 63) begin
 	    frame_clk <= 1;
+	    hub_oe <= 1;
 	    state <= 1;
 	 end else begin
 	    hub_addr <= hub_addr + 1;
@@ -38,11 +39,15 @@ module hub75e_if (
 	 end
       end
       else if (state == 1) begin
-	 frame_clk <= 0;
-	 hub_addr <= hub_addr + 1;
 	 state <= 2;
       end
       else if (state == 2) begin
+	 frame_clk <= 0;
+	 hub_addr <= hub_addr + 1;
+	 state <= 3;
+      end
+      else if (state == 3) begin
+	 hub_oe <= 0;
 	 state <= 0;
       end
    end // always @ (negedge pin_clk)
@@ -99,10 +104,13 @@ module hub75e (
 
    // Power-on and user reset
    reg [5:0] 			 reset_cnt = 0;
-   wire 			 resetn = &reset_cnt;
+   wire 			 presetn = &reset_cnt;
+   reg 				 uresetn = 0;
+   wire 			 resetn = presetn & uresetn;
 
    always @(posedge CLK_IN) begin
-      reset_cnt <= reset_cnt + !resetn;
+      reset_cnt <= reset_cnt + !presetn;
+      uresetn <= USER_KEY;
    end
 
    wire   clock;
@@ -110,7 +118,6 @@ module hub75e (
    pll pll0(CLK_IN, 1'b0, extlock, clock);
    //assign clock = CLK_IN;
 
-   wire [10:0] ram_waddr;
    wire [31:0] ram_wdata;
    wire [10:0] ram_raddr;
    wire [15:0] ram_rdata1;
@@ -121,11 +128,12 @@ module hub75e (
    // Setup SPI and data transfers.
    wire spi_firstword;
    wire spi_done;
+   wire spi_idle;
    reg [10:0] spi_word_count = 0;
    reg 	      first_cycle_done = 0;
 
    spi_satellite spi(clock, resetn, spi_clk, spi_mosi, spi_cs,
-		 ram_wdata, spi_firstword, spi_done);
+		 ram_wdata, spi_firstword, spi_done, spi_idle);
 
    always @(posedge clock) begin
        if (!resetn) begin
@@ -133,7 +141,7 @@ module hub75e (
 	 first_cycle_done <= 0;
       end
 
-      if (spi_firstword) begin
+      if (spi_firstword || spi_idle) begin
          spi_word_count <= 0;
       end
 
@@ -168,6 +176,7 @@ module hub75e (
    end
 
    // Enable display
+   wire enable;
    assign       enable = first_cycle_done;
 
    assign hub_R1 = (ram_rdata1[14:10] > frame_count[9:5]) & enable;
